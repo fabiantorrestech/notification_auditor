@@ -11,7 +11,7 @@
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Notification Auditor Setup"
+        android:text="@string/onboarding_title"
         android:textAppearance="?attr/textAppearanceHeadline5"
         android:layout_marginTop="32dp" />
 
@@ -19,7 +19,7 @@
         android:id="@+id/tv_subtitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Two permissions are required to monitor and analyze your notifications on-device."
+        android:text="@string/onboarding_subtitle"
         android:textAppearance="?attr/textAppearanceBody1"
         android:layout_marginTop="12dp"
         android:textAlignment="center" />
@@ -39,13 +39,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Notification Access"
+                android:text="@string/perm_nls_title"
                 android:textAppearance="?attr/textAppearanceSubtitle1" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Allows the app to read incoming notifications. All data stays on your device."
+                android:text="@string/perm_nls_body"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:layout_marginTop="4dp" />
 
@@ -53,7 +53,7 @@
                 android:id="@+id/btn_grant_nls"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Grant Access"
+                android:text="@string/perm_nls_grant"
                 android:layout_marginTop="12dp" />
 
         </LinearLayout>
@@ -74,13 +74,13 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Usage Stats Access"
+                android:text="@string/perm_usage_title"
                 android:textAppearance="?attr/textAppearanceSubtitle1" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Used to detect when you open an app after receiving a notification (ghost open detection)."
+                android:text="@string/perm_usage_body"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:layout_marginTop="4dp" />
 
@@ -88,7 +88,7 @@
                 android:id="@+id/btn_grant_usage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Grant Access"
+                android:text="@string/perm_usage_grant"
                 android:layout_marginTop="12dp" />
 
         </LinearLayout>
@@ -98,7 +98,7 @@
         android:id="@+id/btn_continue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Continue"
+        android:text="@string/onboarding_continue"
         android:layout_marginTop="32dp"
         android:enabled="false" />
 

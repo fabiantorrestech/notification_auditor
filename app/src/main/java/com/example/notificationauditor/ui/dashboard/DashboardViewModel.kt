@@ -1,6 +1,7 @@
 package com.example.notificationauditor.ui.dashboard
 
 import android.app.Application
+import android.service.notification.NotificationListenerService
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,6 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.entity.StudySession
 import com.example.notificationauditor.data.repository.NotificationRepository
+import com.example.notificationauditor.util.ChannelScore
+import com.example.notificationauditor.util.ScoringEngine
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.util.concurrent.TimeUnit
@@ -18,6 +21,14 @@ data class RecommendationItem(
     val channelId: String,
     val utilityScore: Float,
     val totalPosted: Int
+)
+
+data class PreviewResult(
+    val totalPosted: Int,
+    val clicks: Int,
+    val dismissals: Int,
+    val ghostOpens: Int,
+    val recommendations: List<ChannelScore>
 )
 
 class DashboardViewModel(app: Application) : AndroidViewModel(app) {
@@ -31,6 +42,9 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _recommendations = MutableLiveData<List<RecommendationItem>>(emptyList())
     val recommendations: LiveData<List<RecommendationItem>> = _recommendations
+
+    private val _previewResult = MutableLiveData<PreviewResult?>()
+    val previewResult: LiveData<PreviewResult?> = _previewResult
 
     val studyDurationDays: LiveData<Long> = activeSession.switchMap { session ->
         val liveData = MutableLiveData<Long>()
@@ -63,6 +77,41 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             repository.deleteEventsForSession(session.sessionId)
             refresh()
         }
+    }
+
+    fun previewAnalysis() {
+        viewModelScope.launch {
+            val session = repository.getActiveSession() ?: return@launch
+            val windowEnd = System.currentTimeMillis()
+            val windowStart = windowEnd - TimeUnit.DAYS.toMillis(1)
+            val sevenDaysAgo = windowEnd - TimeUnit.DAYS.toMillis(7)
+
+            val events = repository.getEventsInWindow(session.sessionId, windowStart, windowEnd)
+            val totalPosted = events.size
+            val clicks = events.count {
+                it.removalReason == NotificationListenerService.REASON_CLICK
+            }
+            val dismissals = events.count {
+                !it.isMassClear && it.removalReason == NotificationListenerService.REASON_CANCEL
+            }
+            val ghostOpens = events.count { it.isGhostOpen }
+
+            val channels = repository.getActiveChannels(session.sessionId, sevenDaysAgo, windowEnd)
+            val recommendations = mutableListOf<ChannelScore>()
+            for (channel in channels) {
+                val channelEvents = repository.getChannelEventsInWindow(
+                    session.sessionId, channel.packageName, channel.channelId, sevenDaysAgo, windowEnd
+                )
+                val score = ScoringEngine.score(channelEvents) ?: continue
+                if (score.shouldRecommendDisable) recommendations.add(score)
+            }
+
+            _previewResult.value = PreviewResult(totalPosted, clicks, dismissals, ghostOpens, recommendations)
+        }
+    }
+
+    fun clearPreviewResult() {
+        _previewResult.value = null
     }
 
     private fun parseRecommendations(json: String): List<RecommendationItem> {

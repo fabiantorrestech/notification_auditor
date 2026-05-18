@@ -5,12 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.example.notificationauditor.R
+import com.example.notificationauditor.worker.AnalyticsWorker
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -55,6 +60,42 @@ class DashboardFragment : Fragment() {
             findNavController().navigate(R.id.action_dashboard_to_insights)
         }
 
+        view.findViewById<Button>(R.id.btn_preview_analysis).setOnClickListener {
+            viewModel.previewAnalysis()
+        }
+
+        viewModel.previewResult.observe(viewLifecycleOwner) { result ->
+            result ?: return@observe
+            val message = buildPreviewMessage(result)
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Preview Analysis (unsaved)")
+                .setMessage(message)
+                .setPositiveButton("Dismiss", null)
+                .setOnDismissListener { viewModel.clearPreviewResult() }
+                .show()
+        }
+
+        view.findViewById<Button>(R.id.btn_run_analytics).setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Run Analytics Engine?")
+                .setMessage("This runs the full analytics engine and saves a DailyInsight row to the database — identical to the nightly scheduled run.")
+                .setPositiveButton("Run") { _, _ ->
+                    WorkManager.getInstance(requireContext())
+                        .enqueue(OneTimeWorkRequest.from(AnalyticsWorker::class.java))
+                    Toast.makeText(requireContext(), "Analytics worker enqueued", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        view.findViewById<ImageButton>(R.id.btn_info).setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("How Notification Auditor Works")
+                .setMessage(buildInfoMessage())
+                .setPositiveButton("Got it", null)
+                .show()
+        }
+
         view.findViewById<Button>(R.id.btn_new_study).setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("Start New Study?")
@@ -79,5 +120,56 @@ class DashboardFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         viewModel.refresh()
+    }
+
+    private fun buildInfoMessage(): String = """
+All monitoring is done entirely on your device. No data is ever sent anywhere.
+
+The app passively records when notifications arrive and how you interact with them, then scores each channel by utility.
+
+━━ TERMINOLOGY ━━
+
+Notification Channel
+Each app can post to multiple channels (e.g. "Messages", "Promotions"). Auditor scores channels individually, not whole apps.
+
+Utility Score (0.0 – 1.0)
+How useful a channel is based on your behaviour:
+  • High → you tap or open the app after these notifications
+  • Low  → you swipe them away quickly or ignore them
+Channels below 0.20 with 5+ notifications are flagged as suggested mutes.
+
+Ghost Open
+You received a notification and opened the app within 10 seconds — without tapping the notification itself. Counts as mild engagement.
+
+Mass-Clear Dismissal
+Clearing all notifications at once ("Clear all"). Weighted at 10% of a deliberate swipe — the app assumes you weren't specifically rejecting each one.
+
+Suggested Mutes
+To act on a suggestion: Settings → Apps → [App] → Notifications → disable the channel.
+
+━━ DATA ━━
+
+Raw events are kept for 30 days. Daily snapshots are kept for 1 year.
+
+━━ PREVIEW vs RUN ANALYTICS ━━
+
+Preview Analysis — runs scoring right now and shows results. Nothing is saved.
+Run Analytics Now — saves today's snapshot to the database, identical to the nightly scheduled run.
+""".trimIndent()
+
+    private fun buildPreviewMessage(result: PreviewResult): String = buildString {
+        appendLine("Last 24 hours")
+        appendLine("Posted: ${result.totalPosted}  Clicks: ${result.clicks}  Dismissed: ${result.dismissals}  Ghost opens: ${result.ghostOpens}")
+        appendLine()
+        if (result.recommendations.isEmpty()) {
+            append("No channels flagged. Keep collecting data.")
+        } else {
+            appendLine("Suggested mutes (7-day data):")
+            result.recommendations.forEach { score ->
+                appendLine("• ${score.packageName} / ${score.channelId}")
+                append("  score: ${"%.2f".format(score.utilityScore)}  (${score.totalPosted} notifications)")
+                appendLine()
+            }
+        }
     }
 }

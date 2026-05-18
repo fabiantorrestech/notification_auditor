@@ -11,6 +11,31 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Dashboard"
+                android:textAppearance="?attr/textAppearanceHeadline5" />
+
+            <ImageButton
+                android:id="@+id/btn_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_info"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="App info"
+                android:padding="8dp" />
+
+        </LinearLayout>
+
         <TextView
             android:id="@+id/tv_study_header"
             android:layout_width="wrap_content"
@@ -78,6 +103,21 @@
             android:layout_height="wrap_content"
             android:text="View Insights History"
             android:layout_marginTop="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_preview_analysis"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Preview Analysis"
+            android:layout_marginTop="8dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_run_analytics"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Run Analytics Now (saves to DB)"
+            android:layout_marginTop="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_new_study"

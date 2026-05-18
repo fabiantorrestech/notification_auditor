@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Notification Auditor</string>
+
+    <!-- Onboarding / permission setup -->
+    <string name="onboarding_title">Set Up Your Auditor</string>
+    <string name="onboarding_subtitle">Two permissions required. All analysis stays on your device — no data is ever sent anywhere.</string>
+
+    <string name="perm_nls_title">Notification Access</string>
+    <string name="perm_nls_body">Reads notification metadata locally — app, channel, and timing. No message content is stored.</string>
+    <string name="perm_nls_grant">Grant Access</string>
+
+    <string name="perm_usage_title">Usage Stats Access</string>
+    <string name="perm_usage_body">Detects when you open an app after a notification arrives. Used only for ghost-open scoring — never shared.</string>
+    <string name="perm_usage_grant">Grant Access</string>
+
+    <string name="onboarding_continue">Continue</string>
 </resources>
