@@ -11,12 +11,12 @@ import com.example.notificationauditor.data.repository.NotificationRepository
 import com.example.notificationauditor.service.NotificationHarvesterService
 import com.example.notificationauditor.util.AppPrefs
 import com.example.notificationauditor.util.ChannelScore
+import com.example.notificationauditor.util.DailyCutoffTime
 import com.example.notificationauditor.util.ScoringEngine
 import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
@@ -31,9 +31,12 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
 
         val session = repository.getActiveSession() ?: return Result.success()
 
-        val todayLabel = dateFormat.format(Date())
-        val windowEnd = System.currentTimeMillis()
-        val windowStart = windowEnd - TimeUnit.DAYS.toMillis(1)
+        val nowMs = System.currentTimeMillis()
+        val cutoff = DailyCutoffTime.load(applicationContext)
+        val completedWindow = DailyCutoffTime.completedWindow(nowMs, cutoff)
+        val todayLabel = completedWindow.labelDate
+        val windowEnd = completedWindow.endEpochMs
+        val windowStart = completedWindow.startEpochMs
 
         val events = repository.getEventsInWindow(session.sessionId, windowStart, windowEnd)
 
@@ -78,12 +81,12 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
                 massClearDismissals = massClearDismissals,
                 recommendationsJson = recommendationsJson,
                 channelBreakdownJson = channelBreakdownJson,
-                lastUpdatedAt = System.currentTimeMillis()
+                lastUpdatedAt = nowMs
             )
         )
 
         // Prune raw events older than 30 days
-        val pruneBeforeMs = windowEnd - TimeUnit.DAYS.toMillis(30)
+        val pruneBeforeMs = nowMs - TimeUnit.DAYS.toMillis(30)
         repository.pruneRawEvents(pruneBeforeMs)
 
         // Prune insights older than 1 year

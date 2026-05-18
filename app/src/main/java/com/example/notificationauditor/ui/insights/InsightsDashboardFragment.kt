@@ -30,7 +30,7 @@ class InsightsDashboardFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val rv = view.findViewById<RecyclerView>(R.id.rv_insights)
         val tvEmpty = view.findViewById<TextView>(R.id.tv_insights_empty)
-        val adapter = DailyInsightAdapter(requireContext().packageManager) { date ->
+        val adapter = DailyInsightAdapter { date ->
             findNavController().navigate(
                 R.id.action_insights_to_detail,
                 bundleOf("date" to date)

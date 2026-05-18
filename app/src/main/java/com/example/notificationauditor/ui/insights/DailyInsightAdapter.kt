@@ -1,28 +1,30 @@
 package com.example.notificationauditor.ui.insights
 
-import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notificationauditor.R
 import com.example.notificationauditor.data.db.entity.DailyInsight
+import com.example.notificationauditor.util.AppIconResolver
+import com.example.notificationauditor.util.AppLabelResolver
+import com.example.notificationauditor.util.InsightDateFormatter
 import org.json.JSONArray
 
 class DailyInsightAdapter(
-    private val pm: PackageManager,
     private val onItemClick: (date: String) -> Unit = {}
 ) : ListAdapter<DailyInsight, DailyInsightAdapter.ViewHolder>(DiffCallback) {
-
-    private val appNameCache = HashMap<String, String>()
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvDate: TextView = view.findViewById(R.id.tv_date)
         val tvStats: TextView = view.findViewById(R.id.tv_stats)
-        val tvRecommendations: TextView = view.findViewById(R.id.tv_recommendations)
+        val tvRecommendationsHeader: TextView = view.findViewById(R.id.tv_recommendations_header)
+        val recommendationsContainer: LinearLayout = view.findViewById(R.id.container_recommendations)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -31,7 +33,7 @@ class DailyInsightAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val insight = getItem(position)
         holder.itemView.setOnClickListener { onItemClick(insight.date) }
-        holder.tvDate.text = insight.date
+        holder.tvDate.text = "${position + 1}. ${InsightDateFormatter.format(insight.date)}"
         holder.tvStats.text = buildString {
             append("Posted: ${insight.totalPosted}")
             append("  Clicks: ${insight.clicks}")
@@ -41,20 +43,29 @@ class DailyInsightAdapter(
 
         val recs = parseRecommendations(insight.recommendationsJson)
         if (recs.isNotEmpty()) {
-            holder.tvRecommendations.visibility = View.VISIBLE
-            holder.tvRecommendations.text = "Suggested mutes: " + recs.joinToString(", ") {
-                "${resolveAppName(it.first)}/${it.second}"
+            holder.tvRecommendationsHeader.visibility = View.VISIBLE
+            holder.recommendationsContainer.visibility = View.VISIBLE
+            val context = holder.itemView.context
+            holder.recommendationsContainer.removeAllViews()
+            val inflater = LayoutInflater.from(context)
+            recs.forEach { (packageName, channelId) ->
+                val itemView = inflater.inflate(
+                    R.layout.item_insight_suggestion,
+                    holder.recommendationsContainer,
+                    false
+                )
+                itemView.findViewById<ImageView>(R.id.iv_suggestion_icon)
+                    .setImageDrawable(AppIconResolver.resolve(context, packageName))
+                itemView.findViewById<TextView>(R.id.tv_suggestion_title).text =
+                    AppLabelResolver.resolve(context, packageName)
+                itemView.findViewById<TextView>(R.id.tv_suggestion_subtitle).text =
+                    "$packageName · $channelId"
+                holder.recommendationsContainer.addView(itemView)
             }
         } else {
-            holder.tvRecommendations.visibility = View.GONE
-        }
-    }
-
-    private fun resolveAppName(packageName: String): String {
-        return appNameCache.getOrPut(packageName) {
-            runCatching {
-                pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
-            }.getOrDefault(packageName)
+            holder.tvRecommendationsHeader.visibility = View.GONE
+            holder.recommendationsContainer.visibility = View.GONE
+            holder.recommendationsContainer.removeAllViews()
         }
     }
 

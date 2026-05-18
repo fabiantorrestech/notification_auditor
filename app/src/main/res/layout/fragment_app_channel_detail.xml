@@ -12,17 +12,18 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/tv_detail_date"
+            android:id="@+id/tv_app_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceHeadline6" />
 
         <TextView
-            android:id="@+id/tv_detail_summary"
+            android:id="@+id/tv_package_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:layout_marginTop="4dp" />
+            android:textAppearance="?attr/textAppearanceCaption"
+            android:alpha="0.7"
+            android:layout_marginTop="2dp" />
 
     </LinearLayout>
 
@@ -30,16 +31,16 @@
         android:id="@+id/tv_channels_header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Channel Breakdown"
+        android:text="Channels (7-day window)"
         android:textAppearance="?attr/textAppearanceSubtitle1"
         android:paddingHorizontal="16dp"
         android:paddingBottom="8dp" />
 
     <TextView
-        android:id="@+id/tv_detail_empty"
+        android:id="@+id/tv_empty"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No channel data available for this date.\nRun analytics again to capture a breakdown."
+        android:text="No channel data available."
         android:textAppearance="?attr/textAppearanceBody2"
         android:paddingHorizontal="16dp"
         android:visibility="gone" />
