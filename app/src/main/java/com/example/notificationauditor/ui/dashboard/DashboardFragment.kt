@@ -91,6 +91,10 @@ class DashboardFragment : Fragment() {
                 .show()
         }
 
+        view.findViewById<ImageButton>(R.id.ibtn_settings).setOnClickListener {
+            findNavController().navigate(R.id.action_dashboard_to_settings)
+        }
+
         view.findViewById<ImageButton>(R.id.btn_info).setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
                 .setTitle("How Notification Auditor Works")

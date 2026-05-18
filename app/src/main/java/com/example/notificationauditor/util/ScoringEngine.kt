@@ -33,7 +33,7 @@ object ScoringEngine {
      * fast deliberate swipes (< 5s) push the factor toward 1.0, indicating
      * the user consciously rejected this notification.
      */
-    fun score(events: List<NotificationEvent>): ChannelScore? {
+    fun score(events: List<NotificationEvent>, threshold: Float = DISABLE_THRESHOLD): ChannelScore? {
         if (events.isEmpty()) return null
 
         val pkg = events.first().packageName
@@ -78,7 +78,7 @@ object ScoringEngine {
             clicks = clicks,
             dismissals = deliberateDismissals + massClearDismissals,
             ghostOpens = ghostOpens,
-            shouldRecommendDisable = utilityScore < DISABLE_THRESHOLD && total >= 5
+            shouldRecommendDisable = utilityScore < threshold && total >= 5
         )
     }
 

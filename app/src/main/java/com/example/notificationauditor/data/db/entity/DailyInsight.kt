@@ -17,5 +17,6 @@ data class DailyInsight(
     // JSON array of flagged channels (score < 0.20) serialized as a string
     val recommendationsJson: String = "[]",
     // JSON array of ALL scored channels for the detail view — sorted worst-first
-    val channelBreakdownJson: String = "[]"
+    val channelBreakdownJson: String = "[]",
+    val lastUpdatedAt: Long = 0L
 )

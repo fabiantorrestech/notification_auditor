@@ -22,7 +22,15 @@
         <action
             android:id="@+id/action_dashboard_to_insights"
             app:destination="@id/insightsDashboardFragment" />
+        <action
+            android:id="@+id/action_dashboard_to_settings"
+            app:destination="@id/settingsFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.notificationauditor.ui.settings.SettingsFragment"
+        android:label="Settings" />
 
     <fragment
         android:id="@+id/insightsDashboardFragment"

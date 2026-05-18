@@ -9,6 +9,7 @@ import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.entity.DailyInsight
 import com.example.notificationauditor.data.repository.NotificationRepository
 import com.example.notificationauditor.service.NotificationHarvesterService
+import com.example.notificationauditor.util.AppPrefs
 import com.example.notificationauditor.util.ChannelScore
 import com.example.notificationauditor.util.ScoringEngine
 import org.json.JSONArray
@@ -48,13 +49,17 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
         // Score each channel over a 7-day rolling window
         val sevenDaysAgo = windowEnd - TimeUnit.DAYS.toMillis(7)
         val channels = repository.getActiveChannels(session.sessionId, sevenDaysAgo, windowEnd)
+        val threshold = applicationContext
+            .getSharedPreferences(AppPrefs.NAME, android.content.Context.MODE_PRIVATE)
+            .getFloat(AppPrefs.KEY_THRESHOLD, AppPrefs.DEFAULT_THRESHOLD)
+
         val allScores = mutableListOf<ChannelScore>()
 
         for (channel in channels) {
             val channelEvents = repository.getChannelEventsInWindow(
                 session.sessionId, channel.packageName, channel.channelId, sevenDaysAgo, windowEnd
             )
-            ScoringEngine.score(channelEvents)?.let { allScores.add(it) }
+            ScoringEngine.score(channelEvents, threshold)?.let { allScores.add(it) }
         }
 
         val recommendations = allScores.filter { it.shouldRecommendDisable }
@@ -72,7 +77,8 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
                 ghostOpens = ghostOpens,
                 massClearDismissals = massClearDismissals,
                 recommendationsJson = recommendationsJson,
-                channelBreakdownJson = channelBreakdownJson
+                channelBreakdownJson = channelBreakdownJson,
+                lastUpdatedAt = System.currentTimeMillis()
             )
         )
 

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.entity.StudySession
 import com.example.notificationauditor.data.repository.NotificationRepository
+import com.example.notificationauditor.util.AppPrefs
 import com.example.notificationauditor.util.ChannelScore
 import com.example.notificationauditor.util.ScoringEngine
 import kotlinx.coroutines.launch
@@ -96,13 +97,17 @@ class DashboardViewModel(app: Application) : AndroidViewModel(app) {
             }
             val ghostOpens = events.count { it.isGhostOpen }
 
+            val threshold = getApplication<Application>()
+                .getSharedPreferences(AppPrefs.NAME, android.content.Context.MODE_PRIVATE)
+                .getFloat(AppPrefs.KEY_THRESHOLD, AppPrefs.DEFAULT_THRESHOLD)
+
             val channels = repository.getActiveChannels(session.sessionId, sevenDaysAgo, windowEnd)
             val recommendations = mutableListOf<ChannelScore>()
             for (channel in channels) {
                 val channelEvents = repository.getChannelEventsInWindow(
                     session.sessionId, channel.packageName, channel.channelId, sevenDaysAgo, windowEnd
                 )
-                val score = ScoringEngine.score(channelEvents) ?: continue
+                val score = ScoringEngine.score(channelEvents, threshold) ?: continue
                 if (score.shouldRecommendDisable) recommendations.add(score)
             }
 
