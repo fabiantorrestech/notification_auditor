@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notificationauditor.R
 import com.example.notificationauditor.data.db.entity.FilterRule
+import com.example.notificationauditor.data.db.entity.RuleAction
+import com.example.notificationauditor.data.db.entity.RuleType
 import com.google.android.material.switchmaterial.SwitchMaterial
 
 class FilterRuleAdapter(
@@ -32,8 +34,11 @@ class FilterRuleAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val rule = getItem(position)
         holder.tvType.text = rule.ruleType
-        holder.tvAction.text = rule.action
-        holder.tvPattern.text = rule.pattern
+        holder.tvAction.text = RuleAction.normalize(rule.action)
+        holder.tvPattern.text = when (rule.ruleType) {
+            RuleType.MATCH_ALL -> "All notifications in scope"
+            else -> rule.pattern
+        }
         holder.tvScope.text = buildScopeLabel(rule)
 
         holder.switch.setOnCheckedChangeListener(null)
@@ -45,8 +50,8 @@ class FilterRuleAdapter(
 
     private fun buildScopeLabel(rule: FilterRule): String = when {
         rule.packageName == null -> "All apps"
-        rule.channelId == null -> rule.packageName
-        else -> "${rule.packageName} / ${rule.channelId}"
+        rule.channelId == null -> "App: ${rule.packageName}"
+        else -> "App channel: ${rule.packageName} / ${rule.channelId}"
     }
 
     companion object {

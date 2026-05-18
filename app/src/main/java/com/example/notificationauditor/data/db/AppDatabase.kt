@@ -17,7 +17,7 @@ import com.example.notificationauditor.data.db.entity.StudySession
 
 @Database(
     entities = [StudySession::class, NotificationEvent::class, DailyInsight::class, FilterRule::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -70,6 +70,26 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "ALTER TABLE notification_events ADD COLUMN filterEffect TEXT"
+                )
+                db.execSQL(
+                    "ALTER TABLE notification_events ADD COLUMN excludeFromAnalytics INTEGER NOT NULL DEFAULT 0"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_notification_events_excludeFromAnalytics ON notification_events (excludeFromAnalytics)"
+                )
+                db.execSQL(
+                    "UPDATE filter_rules SET action = 'TAG_ONLY' WHERE action = 'FLAG'"
+                )
+                db.execSQL(
+                    "UPDATE filter_rules SET action = 'SUPPRESS_EXCLUDE' WHERE action = 'SUPPRESS'"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -77,7 +97,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "notification_auditor.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                 .build().also { instance = it }
             }
         }

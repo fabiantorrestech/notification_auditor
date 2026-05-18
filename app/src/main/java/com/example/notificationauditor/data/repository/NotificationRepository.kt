@@ -55,6 +55,9 @@ class NotificationRepository(db: AppDatabase) {
 
     suspend fun pruneRawEvents(cutoffMs: Long) = eventDao.pruneEventsBefore(cutoffMs)
 
+    suspend fun getObservedChannelIds(packageName: String): List<String> =
+        eventDao.getObservedChannelIds(packageName)
+
     suspend fun getActiveChannels(sessionId: Long, from: Long, to: Long): List<ChannelKey> =
         eventDao.getActiveChannels(sessionId, from, to)
 
@@ -70,6 +73,8 @@ class NotificationRepository(db: AppDatabase) {
     suspend fun getLatestInsight(): DailyInsight? = insightDao.getLatest()
 
     suspend fun getInsightByDate(date: String): DailyInsight? = insightDao.getByDate(date)
+
+    suspend fun getAllInsightsSnapshot(): List<DailyInsight> = insightDao.getAllSnapshot()
 
     suspend fun pruneOldInsights(cutoffDate: String) = insightDao.pruneOlderThan(cutoffDate)
 

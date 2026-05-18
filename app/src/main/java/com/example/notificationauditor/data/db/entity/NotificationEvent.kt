@@ -15,7 +15,14 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("sessionId"), Index("packageName"), Index("channelId"), Index("postTimestamp"), Index("filteredByRuleId")]
+    indices = [
+        Index("sessionId"),
+        Index("packageName"),
+        Index("channelId"),
+        Index("postTimestamp"),
+        Index("filteredByRuleId"),
+        Index("excludeFromAnalytics")
+    ]
 )
 data class NotificationEvent(
     @PrimaryKey(autoGenerate = true)
@@ -34,5 +41,7 @@ data class NotificationEvent(
     val isGhostOpen: Boolean = false,
     // MD5 of sender name from MessagingStyle (nullable — not all notifications have a sender)
     val contactHash: String? = null,
-    val filteredByRuleId: Long? = null
+    val filteredByRuleId: Long? = null,
+    val filterEffect: String? = null,
+    val excludeFromAnalytics: Boolean = false
 )

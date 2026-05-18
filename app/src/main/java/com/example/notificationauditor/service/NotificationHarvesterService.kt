@@ -1,11 +1,12 @@
 package com.example.notificationauditor.service
 
+import android.os.Process
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.entity.NotificationEvent
-import com.example.notificationauditor.data.repository.NotificationRepository
 import com.example.notificationauditor.data.db.entity.RuleAction
+import com.example.notificationauditor.data.repository.NotificationRepository
 import com.example.notificationauditor.util.DndTracker
 import com.example.notificationauditor.util.FilterEngine
 import com.example.notificationauditor.util.GhostOpenDetector
@@ -28,6 +29,7 @@ class NotificationHarvesterService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         val db = AppDatabase.getInstance(applicationContext)
         repository = NotificationRepository(db)
         dndTracker = DndTracker(applicationContext)
@@ -42,6 +44,9 @@ class NotificationHarvesterService : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        if (instance === this) {
+            instance = null
+        }
         job.cancel()
     }
 
@@ -73,10 +78,12 @@ class NotificationHarvesterService : NotificationListenerService() {
                         channelId = channelId,
                         postTimestamp = sbn.postTime,
                         contactHash = contactHash,
-                        filteredByRuleId = filterResult.ruleId
+                        filteredByRuleId = filterResult.ruleId,
+                        filterEffect = filterResult.effect,
+                        excludeFromAnalytics = filterResult.excludeFromAnalytics
                     )
                 )
-                if (filterResult.action == RuleAction.SUPPRESS) {
+                if (RuleAction.suppressesLiveNotification(filterResult.effect)) {
                     cancelNotification(sbn.key)
                 }
             }
@@ -134,4 +141,67 @@ class NotificationHarvesterService : NotificationListenerService() {
         val bytes = MessageDigest.getInstance("MD5").digest(input.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
     }
+
+    companion object {
+        private const val FULL_CHANNEL_LOOKUP_UNAVAILABLE =
+            "Full channel lookup requires a connected notification listener."
+
+        @Volatile
+        private var instance: NotificationHarvesterService? = null
+
+        fun getActiveChannelIdsForPackage(packageName: String): List<String> {
+            val service = instance ?: return emptyList()
+            return runCatching {
+                service.activeNotifications
+                    .asSequence()
+                    .filter { it.packageName == packageName }
+                    .mapNotNull { it.notification?.channelId }
+                    .distinct()
+                    .sortedBy { it.lowercase() }
+                    .toList()
+            }.getOrDefault(emptyList())
+        }
+
+        fun getNotificationChannelsForPackage(packageName: String): AppChannelLookupResult {
+            val service = instance ?: return AppChannelLookupResult(
+                isAvailable = false,
+                unavailableMessage = FULL_CHANNEL_LOOKUP_UNAVAILABLE
+            )
+
+            return runCatching {
+                AppChannelLookupResult(
+                    channels = service.getNotificationChannels(packageName, Process.myUserHandle())
+                        .asSequence()
+                        .mapNotNull { channel ->
+                            val channelId = channel.id.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                            AppNotificationChannel(
+                                channelId = channelId,
+                                channelName = channel.name?.toString()?.takeIf { it.isNotBlank() }
+                            )
+                        }
+                        .sortedBy { channel ->
+                            (channel.channelName ?: channel.channelId).lowercase()
+                        }
+                        .toList(),
+                    isAvailable = true
+                )
+            }.getOrElse {
+                AppChannelLookupResult(
+                    isAvailable = false,
+                    unavailableMessage = "Couldn't load channels from the connected notification listener."
+                )
+            }
+        }
+    }
 }
+
+data class AppNotificationChannel(
+    val channelId: String,
+    val channelName: String?
+)
+
+data class AppChannelLookupResult(
+    val channels: List<AppNotificationChannel> = emptyList(),
+    val isAvailable: Boolean,
+    val unavailableMessage: String? = null
+)

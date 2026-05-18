@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.notificationauditor.R
 import com.example.notificationauditor.data.db.entity.FilterRule
 import com.example.notificationauditor.data.db.entity.NotificationEvent
+import com.example.notificationauditor.data.db.entity.RuleAction
+import com.example.notificationauditor.data.db.entity.RuleType
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -45,12 +47,20 @@ class FilteredEventsAdapter(
         holder.tvTime.text = dateFormat.format(Date(event.postTimestamp))
 
         val rule = event.filteredByRuleId?.let { rulesById[it] }
+        val effect = event.filterEffect?.let(RuleAction::normalize)
+            ?: rule?.action?.let(RuleAction::normalize)
+            ?: "UNKNOWN"
+
+        holder.tvActionBadge.text = effect
         if (rule != null) {
-            holder.tvActionBadge.text = rule.action
-            holder.tvRule.text = "Rule #${rule.ruleId}: ${rule.ruleType} — \"${rule.pattern}\""
+            val ruleDescription = if (rule.ruleType == RuleType.MATCH_ALL) {
+                "All notifications in scope"
+            } else {
+                "\"${rule.pattern}\""
+            }
+            holder.tvRule.text = "Rule #${rule.ruleId}: ${rule.ruleType} — $ruleDescription"
         } else {
-            holder.tvActionBadge.text = "?"
-            holder.tvRule.text = "Rule #${event.filteredByRuleId}"
+            holder.tvRule.text = "Rule #${event.filteredByRuleId} (snapshot)"
         }
     }
 

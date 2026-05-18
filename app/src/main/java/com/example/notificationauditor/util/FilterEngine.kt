@@ -4,7 +4,11 @@ import com.example.notificationauditor.data.db.entity.FilterRule
 import com.example.notificationauditor.data.db.entity.RuleAction
 import com.example.notificationauditor.data.db.entity.RuleType
 
-data class FilterResult(val ruleId: Long, val action: String)
+data class FilterResult(
+    val ruleId: Long,
+    val effect: String,
+    val excludeFromAnalytics: Boolean
+)
 
 class FilterEngine {
 
@@ -29,55 +33,71 @@ class FilterEngine {
         body: String?,
         contactHash: String?
     ): FilterResult? {
-        val snapshot = rules
-
-        // Scope: keep rules applicable to this package + channel
-        val applicable = snapshot.filter { rule ->
-            val pkgMatch = rule.packageName == null || rule.packageName == packageName
-            val chMatch = rule.channelId == null ||
-                    (rule.packageName != null && rule.channelId == channelId)
-            pkgMatch && chMatch
-        }
-
-        // CONTACT_WHITELIST — evaluated as a group before per-rule loop
-        val whitelistRules = applicable.filter { it.ruleType == RuleType.CONTACT_WHITELIST }
-        if (whitelistRules.isNotEmpty()) {
-            val allowed = contactHash != null && whitelistRules.any { it.pattern == contactHash }
-            if (!allowed) {
-                val rep = whitelistRules.first()
-                return FilterResult(rep.ruleId, rep.action)
-            }
-        }
-
-        // Per-rule loop — first match wins
         val text = buildString {
             title?.let { append(it) }
             if (title != null && body != null) append(" ")
             body?.let { append(it) }
         }
 
-        for (rule in applicable) {
-            when (rule.ruleType) {
-                RuleType.KEYWORD -> {
-                    if (text.contains(rule.pattern, ignoreCase = true)) {
-                        return FilterResult(rule.ruleId, rule.action)
-                    }
+        val snapshot = rules.sortedWith(
+            compareByDescending<FilterRule> { it.createdAt }
+                .thenByDescending { it.ruleId }
+        )
+
+        val scopedRules = listOf(
+            snapshot.filter { it.packageName == packageName && it.channelId == channelId },
+            snapshot.filter { it.packageName == packageName && it.channelId == null },
+            snapshot.filter { it.packageName == null && it.channelId == null }
+        )
+
+        for (scopeRules in scopedRules) {
+            if (scopeRules.isEmpty()) continue
+
+            val whitelistRules = scopeRules.filter { it.ruleType == RuleType.CONTACT_WHITELIST }
+            if (whitelistRules.isNotEmpty()) {
+                val allowed = contactHash != null && whitelistRules.any { it.pattern == contactHash }
+                if (!allowed) {
+                    return whitelistRules.first().toResult()
                 }
-                RuleType.REGEX -> {
-                    val regex = compiledRegexes[rule.ruleId] ?: continue
-                    if (regex.containsMatchIn(text)) {
-                        return FilterResult(rule.ruleId, rule.action)
+            }
+
+            for (rule in scopeRules) {
+                when (rule.ruleType) {
+                    RuleType.MATCH_ALL -> continue
+                    RuleType.KEYWORD -> {
+                        if (text.contains(rule.pattern, ignoreCase = true)) {
+                            return rule.toResult()
+                        }
                     }
-                }
-                RuleType.CONTACT_BLACKLIST -> {
-                    if (contactHash != null && contactHash == rule.pattern) {
-                        return FilterResult(rule.ruleId, rule.action)
+                    RuleType.REGEX -> {
+                        val regex = compiledRegexes[rule.ruleId] ?: continue
+                        if (regex.containsMatchIn(text)) {
+                            return rule.toResult()
+                        }
                     }
+                    RuleType.CONTACT_BLACKLIST -> {
+                        if (contactHash != null && contactHash == rule.pattern) {
+                            return rule.toResult()
+                        }
+                    }
+                    RuleType.CONTACT_WHITELIST -> continue
                 }
-                RuleType.CONTACT_WHITELIST -> continue
+            }
+
+            scopeRules.firstOrNull { it.ruleType == RuleType.MATCH_ALL }?.let { rule ->
+                return rule.toResult()
             }
         }
 
         return null
+    }
+
+    private fun FilterRule.toResult(): FilterResult {
+        val effect = RuleAction.normalize(action)
+        return FilterResult(
+            ruleId = ruleId,
+            effect = effect,
+            excludeFromAnalytics = RuleAction.excludesFromAnalytics(effect)
+        )
     }
 }

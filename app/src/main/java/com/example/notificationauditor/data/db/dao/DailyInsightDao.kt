@@ -19,6 +19,9 @@ interface DailyInsightDao {
     @Query("SELECT * FROM daily_insights WHERE date BETWEEN :from AND :to ORDER BY date DESC")
     suspend fun getInRange(from: String, to: String): List<DailyInsight>
 
+    @Query("SELECT * FROM daily_insights ORDER BY date DESC")
+    suspend fun getAllSnapshot(): List<DailyInsight>
+
     @Query("SELECT * FROM daily_insights ORDER BY date DESC LIMIT 1")
     suspend fun getLatest(): DailyInsight?
 

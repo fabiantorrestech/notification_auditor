@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -13,15 +14,36 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:text="Add Filter Rule"
-            android:textAppearance="?attr/textAppearanceHeadline5"
-            android:layout_marginBottom="16dp" />
+            android:textAppearance="?attr/textAppearanceHeadline5" />
 
-        <!-- Rule Type -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose where the rule applies, then choose whether matching notifications are hidden live, excluded from analytics, or both."
+            android:textAppearance="?attr/textAppearanceBody2" />
+
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Rule Type"
+            android:layout_marginTop="16dp"
+            android:hint="Scope"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+            <AutoCompleteTextView
+                android:id="@+id/actv_rule_scope"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="none" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:hint="Match type"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
             <AutoCompleteTextView
@@ -32,13 +54,12 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Pattern -->
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_pattern"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:hint="Pattern (keyword, regex, or contact hash)"
+            android:hint="Keyword pattern"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -48,65 +69,141 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- App Package (optional) -->
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_app"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:hint="App package name (leave blank for all apps)"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            android:hint="App"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_package_name"
+            <AutoCompleteTextView
+                android:id="@+id/actv_app"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="text" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Channel ID (optional) -->
-        <com.google.android.material.textfield.TextInputLayout
+        <LinearLayout
+            android:id="@+id/row_channel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:hint="Channel ID (leave blank for all channels)"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+            android:orientation="vertical">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_channel_id"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/toggle_channel_source"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:checkedButton="@id/btn_channel_observed"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_channel_observed"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="Observed" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_channel_all"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="All" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_channel_manual"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="0dp"
+                    android:text="Manual" />
+
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_channel_id"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="text" />
+                android:layout_marginTop="8dp"
+                android:hint="Channel ID">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <AutoCompleteTextView
+                    android:id="@+id/actv_channel_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="none" />
 
-        <!-- Action -->
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Action"
-            android:textAppearance="?attr/textAppearanceBody2"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="16dp"
+            android:text="Rule effect"
+            android:textAppearance="?attr/textAppearanceBody2" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Exclude only: visible notification, excluded from analytics"
+                android:textAppearance="?attr/textAppearanceCaption" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="• Suppress + exclude: canceled live, excluded from analytics"
+                android:textAppearance="?attr/textAppearanceCaption" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="• Tag only: visible notification, still counted in analytics"
+                android:textAppearance="?attr/textAppearanceCaption" />
+
+        </LinearLayout>
 
         <RadioGroup
             android:id="@+id/rg_action"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
 
             <RadioButton
-                android:id="@+id/rb_suppress"
+                android:id="@+id/rb_exclude_only"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Suppress"
-                android:checked="true" />
+                android:checked="true"
+                android:text="Exclude only" />
 
             <RadioButton
-                android:id="@+id/rb_flag"
+                android:id="@+id/rb_suppress_exclude"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="Flag only" />
+                android:text="Suppress + exclude" />
+
+            <RadioButton
+                android:id="@+id/rb_tag_only"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tag only" />
 
         </RadioGroup>
 
@@ -114,8 +211,8 @@
             android:id="@+id/btn_save_rule"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Save Rule"
-            android:layout_marginTop="24dp" />
+            android:layout_marginTop="24dp"
+            android:text="Save Rule" />
 
     </LinearLayout>
 
