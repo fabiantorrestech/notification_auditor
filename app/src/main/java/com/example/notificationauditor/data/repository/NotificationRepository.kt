@@ -4,14 +4,17 @@ import androidx.lifecycle.LiveData
 import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.dao.ChannelKey
 import com.example.notificationauditor.data.db.entity.DailyInsight
+import com.example.notificationauditor.data.db.entity.FilterRule
 import com.example.notificationauditor.data.db.entity.NotificationEvent
 import com.example.notificationauditor.data.db.entity.StudySession
+import kotlinx.coroutines.flow.Flow
 
 class NotificationRepository(db: AppDatabase) {
 
     private val sessionDao = db.studySessionDao()
     private val eventDao = db.notificationEventDao()
     private val insightDao = db.dailyInsightDao()
+    private val filterRuleDao = db.filterRuleDao()
 
     // --- StudySession ---
 
@@ -69,4 +72,18 @@ class NotificationRepository(db: AppDatabase) {
     suspend fun getInsightByDate(date: String): DailyInsight? = insightDao.getByDate(date)
 
     suspend fun pruneOldInsights(cutoffDate: String) = insightDao.pruneOlderThan(cutoffDate)
+
+    // --- FilterRule ---
+
+    suspend fun insertRule(rule: FilterRule): Long = filterRuleDao.insert(rule)
+
+    suspend fun updateRule(rule: FilterRule) = filterRuleDao.update(rule)
+
+    suspend fun deleteRule(rule: FilterRule) = filterRuleDao.delete(rule)
+
+    fun observeAllRules(): Flow<List<FilterRule>> = filterRuleDao.observeAll()
+
+    fun observeEnabledRules(): Flow<List<FilterRule>> = filterRuleDao.observeEnabled()
+
+    fun observeFilteredEvents(): Flow<List<NotificationEvent>> = eventDao.observeFiltered()
 }

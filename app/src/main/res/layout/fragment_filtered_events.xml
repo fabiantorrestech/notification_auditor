@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Caught Events"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_filtered_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No events have been caught by rules yet."
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_filtered_events"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+</LinearLayout>

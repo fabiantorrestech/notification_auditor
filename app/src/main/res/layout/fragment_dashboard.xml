@@ -53,6 +53,15 @@
                 android:padding="8dp" />
 
             <ImageButton
+                android:id="@+id/ibtn_filter_rules"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_filter"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Filter rules"
+                android:padding="8dp" />
+
+            <ImageButton
                 android:id="@+id/ibtn_settings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

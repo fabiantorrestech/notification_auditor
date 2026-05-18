@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.example.notificationauditor.data.db.entity.NotificationEvent
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotificationEventDao {
@@ -40,6 +41,9 @@ interface NotificationEventDao {
 
     @Query("DELETE FROM notification_events WHERE postTimestamp < :cutoff")
     suspend fun pruneEventsBefore(cutoff: Long)
+
+    @Query("SELECT * FROM notification_events WHERE filteredByRuleId IS NOT NULL ORDER BY postTimestamp DESC")
+    fun observeFiltered(): Flow<List<NotificationEvent>>
 
     // Returns distinct (packageName, channelId) pairs active in the given window
     @Query("""

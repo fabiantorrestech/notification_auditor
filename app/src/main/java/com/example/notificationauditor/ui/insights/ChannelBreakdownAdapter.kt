@@ -1,10 +1,13 @@
 package com.example.notificationauditor.ui.insights
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -26,6 +29,7 @@ class ChannelBreakdownAdapter :
         val progress: LinearProgressIndicator = view.findViewById(R.id.progress_utility)
         val tvScoreLabel: TextView = view.findViewById(R.id.tv_score_label)
         val chipMute: Chip = view.findViewById(R.id.chip_mute)
+        val btnOpenSettings: ImageButton = view.findViewById(R.id.btn_open_settings)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -59,6 +63,14 @@ class ChannelBreakdownAdapter :
         holder.progress.setIndicatorColor(color)
 
         holder.chipMute.visibility = if (item.flagged) View.VISIBLE else View.GONE
+
+        holder.btnOpenSettings.setOnClickListener {
+            val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
+                putExtra(Settings.EXTRA_APP_PACKAGE, item.packageName)
+                putExtra(Settings.EXTRA_CHANNEL_ID, item.channelId)
+            }
+            ctx.startActivity(intent)
+        }
     }
 
     private fun resolveAppName(pm: PackageManager, packageName: String): String {

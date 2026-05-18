@@ -5,7 +5,9 @@ import android.service.notification.StatusBarNotification
 import com.example.notificationauditor.data.db.AppDatabase
 import com.example.notificationauditor.data.db.entity.NotificationEvent
 import com.example.notificationauditor.data.repository.NotificationRepository
+import com.example.notificationauditor.data.db.entity.RuleAction
 import com.example.notificationauditor.util.DndTracker
+import com.example.notificationauditor.util.FilterEngine
 import com.example.notificationauditor.util.GhostOpenDetector
 import com.example.notificationauditor.util.NotificationFilter
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +24,7 @@ class NotificationHarvesterService : NotificationListenerService() {
     private lateinit var repository: NotificationRepository
     private lateinit var dndTracker: DndTracker
     private lateinit var ghostOpenDetector: GhostOpenDetector
+    private lateinit var filterEngine: FilterEngine
 
     override fun onCreate() {
         super.onCreate()
@@ -29,6 +32,12 @@ class NotificationHarvesterService : NotificationListenerService() {
         repository = NotificationRepository(db)
         dndTracker = DndTracker(applicationContext)
         ghostOpenDetector = GhostOpenDetector(applicationContext)
+        filterEngine = FilterEngine()
+        scope.launch {
+            repository.observeEnabledRules().collect { rules ->
+                filterEngine.updateRules(rules)
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -39,9 +48,42 @@ class NotificationHarvesterService : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification, rankingMap: RankingMap) {
         if (NotificationFilter.shouldIgnore(sbn)) return
 
-        val isIntercepted = dndTracker.isInterceptedByDnd(sbn.key, rankingMap)
+        val extras = sbn.notification?.extras
+        val title = extras?.getCharSequence(android.app.Notification.EXTRA_TITLE)?.toString()
+        val body = extras?.getCharSequence(android.app.Notification.EXTRA_TEXT)?.toString()
         val senderName = NotificationFilter.extractSenderName(sbn)
         val contactHash = senderName?.let { md5(it) }
+        val channelId = sbn.notification?.channelId ?: "default"
+
+        val filterResult = filterEngine.evaluate(
+            packageName = sbn.packageName,
+            channelId = channelId,
+            title = title,
+            body = body,
+            contactHash = contactHash
+        )
+
+        if (filterResult != null) {
+            scope.launch {
+                val session = repository.getActiveSession() ?: return@launch
+                repository.insertEvent(
+                    NotificationEvent(
+                        sessionId = session.sessionId,
+                        packageName = sbn.packageName,
+                        channelId = channelId,
+                        postTimestamp = sbn.postTime,
+                        contactHash = contactHash,
+                        filteredByRuleId = filterResult.ruleId
+                    )
+                )
+                if (filterResult.action == RuleAction.SUPPRESS) {
+                    cancelNotification(sbn.key)
+                }
+            }
+            return
+        }
+
+        val isIntercepted = dndTracker.isInterceptedByDnd(sbn.key, rankingMap)
 
         scope.launch {
             val session = repository.getActiveSession() ?: return@launch
@@ -49,7 +91,7 @@ class NotificationHarvesterService : NotificationListenerService() {
                 NotificationEvent(
                     sessionId = session.sessionId,
                     packageName = sbn.packageName,
-                    channelId = sbn.notification?.channelId ?: "default",
+                    channelId = channelId,
                     postTimestamp = sbn.postTime,
                     isInterceptedByDnd = isIntercepted,
                     contactHash = contactHash

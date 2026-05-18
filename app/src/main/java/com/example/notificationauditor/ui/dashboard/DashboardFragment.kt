@@ -91,6 +91,10 @@ class DashboardFragment : Fragment() {
                 .show()
         }
 
+        view.findViewById<ImageButton>(R.id.ibtn_filter_rules).setOnClickListener {
+            findNavController().navigate(R.id.action_dashboard_to_filter_rules)
+        }
+
         view.findViewById<ImageButton>(R.id.ibtn_settings).setOnClickListener {
             findNavController().navigate(R.id.action_dashboard_to_settings)
         }

@@ -15,7 +15,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         )
     ],
-    indices = [Index("sessionId"), Index("packageName"), Index("channelId"), Index("postTimestamp")]
+    indices = [Index("sessionId"), Index("packageName"), Index("channelId"), Index("postTimestamp"), Index("filteredByRuleId")]
 )
 data class NotificationEvent(
     @PrimaryKey(autoGenerate = true)
@@ -33,5 +33,6 @@ data class NotificationEvent(
     // True when REASON_APP_CANCEL + app foregrounded within window
     val isGhostOpen: Boolean = false,
     // MD5 of sender name from MessagingStyle (nullable — not all notifications have a sender)
-    val contactHash: String? = null
+    val contactHash: String? = null,
+    val filteredByRuleId: Long? = null
 )

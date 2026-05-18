@@ -7,15 +7,17 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.notificationauditor.data.db.dao.DailyInsightDao
+import com.example.notificationauditor.data.db.dao.FilterRuleDao
 import com.example.notificationauditor.data.db.dao.NotificationEventDao
 import com.example.notificationauditor.data.db.dao.StudySessionDao
 import com.example.notificationauditor.data.db.entity.DailyInsight
+import com.example.notificationauditor.data.db.entity.FilterRule
 import com.example.notificationauditor.data.db.entity.NotificationEvent
 import com.example.notificationauditor.data.db.entity.StudySession
 
 @Database(
-    entities = [StudySession::class, NotificationEvent::class, DailyInsight::class],
-    version = 3,
+    entities = [StudySession::class, NotificationEvent::class, DailyInsight::class, FilterRule::class],
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -23,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun studySessionDao(): StudySessionDao
     abstract fun notificationEventDao(): NotificationEventDao
     abstract fun dailyInsightDao(): DailyInsightDao
+    abstract fun filterRuleDao(): FilterRuleDao
 
     companion object {
         @Volatile
@@ -44,6 +47,29 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS filter_rules (
+                        ruleId      INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        ruleType    TEXT    NOT NULL,
+                        pattern     TEXT    NOT NULL,
+                        packageName TEXT,
+                        channelId   TEXT,
+                        action      TEXT    NOT NULL,
+                        isEnabled   INTEGER NOT NULL DEFAULT 1,
+                        createdAt   INTEGER NOT NULL DEFAULT 0
+                    )
+                """.trimIndent())
+                db.execSQL(
+                    "ALTER TABLE notification_events ADD COLUMN filteredByRuleId INTEGER"
+                )
+                db.execSQL(
+                    "CREATE INDEX IF NOT EXISTS index_notification_events_filteredByRuleId ON notification_events (filteredByRuleId)"
+                )
+            }
+        }
+
         fun getInstance(context: Context): AppDatabase {
             return instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
@@ -51,7 +77,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "notification_auditor.db"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .build().also { instance = it }
             }
         }

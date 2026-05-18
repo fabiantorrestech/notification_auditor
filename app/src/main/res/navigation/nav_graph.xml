@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_dashboard_to_settings"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_dashboard_to_filter_rules"
+            app:destination="@id/filterRulesFragment" />
     </fragment>
 
     <fragment
@@ -49,5 +52,27 @@
             android:name="date"
             app:argType="string" />
     </fragment>
+
+    <fragment
+        android:id="@+id/filterRulesFragment"
+        android:name="com.example.notificationauditor.ui.filter.FilterRulesFragment"
+        android:label="Filter Rules">
+        <action
+            android:id="@+id/action_filter_rules_to_add_rule"
+            app:destination="@id/addRuleFragment" />
+        <action
+            android:id="@+id/action_filter_rules_to_filtered_events"
+            app:destination="@id/filteredEventsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/addRuleFragment"
+        android:name="com.example.notificationauditor.ui.filter.AddRuleFragment"
+        android:label="Add Filter Rule" />
+
+    <fragment
+        android:id="@+id/filteredEventsFragment"
+        android:name="com.example.notificationauditor.ui.filter.FilteredEventsFragment"
+        android:label="Caught Events" />
 
 </navigation>
