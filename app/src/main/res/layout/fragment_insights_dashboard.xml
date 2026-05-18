@@ -6,11 +6,29 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Insights History"
-        android:textAppearance="?attr/textAppearanceHeadline6" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Insights History"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <ImageButton
+            android:id="@+id/ibtn_run_analytics"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_run_analytics"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Run analytics"
+            android:padding="8dp" />
+
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_insights_empty"

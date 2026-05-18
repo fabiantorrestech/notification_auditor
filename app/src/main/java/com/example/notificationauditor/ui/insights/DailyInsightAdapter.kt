@@ -1,5 +1,6 @@
 package com.example.notificationauditor.ui.insights
 
+import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,8 +12,12 @@ import com.example.notificationauditor.R
 import com.example.notificationauditor.data.db.entity.DailyInsight
 import org.json.JSONArray
 
-class DailyInsightAdapter :
-    ListAdapter<DailyInsight, DailyInsightAdapter.ViewHolder>(DiffCallback) {
+class DailyInsightAdapter(
+    private val pm: PackageManager,
+    private val onItemClick: (date: String) -> Unit = {}
+) : ListAdapter<DailyInsight, DailyInsightAdapter.ViewHolder>(DiffCallback) {
+
+    private val appNameCache = HashMap<String, String>()
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvDate: TextView = view.findViewById(R.id.tv_date)
@@ -25,6 +30,7 @@ class DailyInsightAdapter :
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val insight = getItem(position)
+        holder.itemView.setOnClickListener { onItemClick(insight.date) }
         holder.tvDate.text = insight.date
         holder.tvStats.text = buildString {
             append("Posted: ${insight.totalPosted}")
@@ -37,10 +43,18 @@ class DailyInsightAdapter :
         if (recs.isNotEmpty()) {
             holder.tvRecommendations.visibility = View.VISIBLE
             holder.tvRecommendations.text = "Suggested mutes: " + recs.joinToString(", ") {
-                "${it.first}/${it.second}"
+                "${resolveAppName(it.first)}/${it.second}"
             }
         } else {
             holder.tvRecommendations.visibility = View.GONE
+        }
+    }
+
+    private fun resolveAppName(packageName: String): String {
+        return appNameCache.getOrPut(packageName) {
+            runCatching {
+                pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+            }.getOrDefault(packageName)
         }
     }
 

@@ -27,6 +27,19 @@
     <fragment
         android:id="@+id/insightsDashboardFragment"
         android:name="com.example.notificationauditor.ui.insights.InsightsDashboardFragment"
-        android:label="Insights" />
+        android:label="Insights">
+        <action
+            android:id="@+id/action_insights_to_detail"
+            app:destination="@id/insightDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/insightDetailFragment"
+        android:name="com.example.notificationauditor.ui.insights.InsightDetailFragment"
+        android:label="Insight Detail">
+        <argument
+            android:name="date"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

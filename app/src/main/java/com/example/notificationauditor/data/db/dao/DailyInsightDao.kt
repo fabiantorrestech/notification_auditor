@@ -23,6 +23,9 @@ interface DailyInsightDao {
     suspend fun getLatest(): DailyInsight?
 
     // Prune insights older than 1 year (called externally with the cutoff date string)
+    @Query("SELECT * FROM daily_insights WHERE date = :date LIMIT 1")
+    suspend fun getByDate(date: String): DailyInsight?
+
     @Query("DELETE FROM daily_insights WHERE date < :cutoffDate")
     suspend fun pruneOlderThan(cutoffDate: String)
 }

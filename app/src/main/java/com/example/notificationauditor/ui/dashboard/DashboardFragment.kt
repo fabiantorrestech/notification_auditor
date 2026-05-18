@@ -1,5 +1,6 @@
 package com.example.notificationauditor.ui.dashboard
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,14 +9,10 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import androidx.work.OneTimeWorkRequest
-import androidx.work.WorkManager
 import com.example.notificationauditor.R
-import com.example.notificationauditor.worker.AnalyticsWorker
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
@@ -47,7 +44,8 @@ class DashboardFragment : Fragment() {
                 tvEmpty.visibility = View.GONE
                 recs.take(5).forEach { rec ->
                     val chip = TextView(requireContext()).apply {
-                        text = "• ${rec.packageName} / ${rec.channelId} — score: ${"%.2f".format(rec.utilityScore)}"
+                        val appLabel = resolveAppName(requireContext().packageManager, rec.packageName)
+                        text = "• $appLabel (${rec.packageName}) / ${rec.channelId} — score: ${"%.2f".format(rec.utilityScore)}"
                         textSize = 14f
                         setPadding(0, 4, 0, 4)
                     }
@@ -75,15 +73,20 @@ class DashboardFragment : Fragment() {
                 .show()
         }
 
-        view.findViewById<Button>(R.id.btn_run_analytics).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.ibtn_new_study).setOnClickListener {
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Run Analytics Engine?")
-                .setMessage("This runs the full analytics engine and saves a DailyInsight row to the database — identical to the nightly scheduled run.")
-                .setPositiveButton("Run") { _, _ ->
-                    WorkManager.getInstance(requireContext())
-                        .enqueue(OneTimeWorkRequest.from(AnalyticsWorker::class.java))
-                    Toast.makeText(requireContext(), "Analytics worker enqueued", Toast.LENGTH_SHORT).show()
-                }
+                .setTitle("Start New Study?")
+                .setMessage("This will archive the current session and begin fresh tracking.")
+                .setPositiveButton("Start") { _, _ -> viewModel.startNewStudy() }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        view.findViewById<ImageButton>(R.id.ibtn_clear_data).setOnClickListener {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle("Clear Study Data?")
+                .setMessage("All raw notification events for this session will be deleted. Insights history is preserved.")
+                .setPositiveButton("Clear") { _, _ -> viewModel.clearStudyData() }
                 .setNegativeButton("Cancel", null)
                 .show()
         }
@@ -96,24 +99,6 @@ class DashboardFragment : Fragment() {
                 .show()
         }
 
-        view.findViewById<Button>(R.id.btn_new_study).setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Start New Study?")
-                .setMessage("This will archive the current session and begin fresh tracking.")
-                .setPositiveButton("Start") { _, _ -> viewModel.startNewStudy() }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
-        view.findViewById<Button>(R.id.btn_clear_data).setOnClickListener {
-            MaterialAlertDialogBuilder(requireContext())
-                .setTitle("Clear Study Data?")
-                .setMessage("All raw notification events for this session will be deleted. Insights history is preserved.")
-                .setPositiveButton("Clear") { _, _ -> viewModel.clearStudyData() }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
         viewModel.refresh()
     }
 
@@ -121,6 +106,10 @@ class DashboardFragment : Fragment() {
         super.onResume()
         viewModel.refresh()
     }
+
+    private fun resolveAppName(pm: PackageManager, packageName: String): String =
+        runCatching { pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString() }
+            .getOrDefault(packageName)
 
     private fun buildInfoMessage(): String = """
 All monitoring is done entirely on your device. No data is ever sent anywhere.

@@ -66,5 +66,7 @@ class NotificationRepository(db: AppDatabase) {
 
     suspend fun getLatestInsight(): DailyInsight? = insightDao.getLatest()
 
+    suspend fun getInsightByDate(date: String): DailyInsight? = insightDao.getByDate(date)
+
     suspend fun pruneOldInsights(cutoffDate: String) = insightDao.pruneOlderThan(cutoffDate)
 }

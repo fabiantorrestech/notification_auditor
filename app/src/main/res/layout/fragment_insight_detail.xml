@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_detail_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceHeadline6" />
+
+        <TextView
+            android:id="@+id/tv_detail_summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody2"
+            android:layout_marginTop="4dp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_channels_header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Channels (7-day window)"
+        android:textAppearance="?attr/textAppearanceSubtitle1"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="8dp" />
+
+    <TextView
+        android:id="@+id/tv_detail_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No channel data available for this date.\nRun analytics again to capture a breakdown."
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:paddingHorizontal="16dp"
+        android:visibility="gone" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_channels"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingHorizontal="16dp"
+        android:clipToPadding="false" />
+
+</LinearLayout>

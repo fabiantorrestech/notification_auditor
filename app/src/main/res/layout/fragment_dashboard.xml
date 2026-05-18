@@ -26,6 +26,24 @@
                 android:textAppearance="?attr/textAppearanceHeadline5" />
 
             <ImageButton
+                android:id="@+id/ibtn_new_study"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_book_add"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Start new study"
+                android:padding="8dp" />
+
+            <ImageButton
+                android:id="@+id/ibtn_clear_data"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_delete"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Clear study data"
+                android:padding="8dp" />
+
+            <ImageButton
                 android:id="@+id/btn_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -72,6 +90,21 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_view_insights"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View Insights History"
+            android:layout_marginTop="16dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_preview_analysis"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Preview Analysis"
+            android:layout_marginTop="8dp" />
+
         <TextView
             android:id="@+id/tv_recommendations_header"
             android:layout_width="wrap_content"
@@ -96,44 +129,6 @@
             android:orientation="vertical"
             android:layout_marginTop="8dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_view_insights"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="View Insights History"
-            android:layout_marginTop="24dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_preview_analysis"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Preview Analysis"
-            android:layout_marginTop="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_run_analytics"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Run Analytics Now (saves to DB)"
-            android:layout_marginTop="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_new_study"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Start New Study"
-            android:layout_marginTop="8dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_clear_data"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Clear Study Data"
-            android:layout_marginTop="8dp" />
 
     </LinearLayout>
 </ScrollView>

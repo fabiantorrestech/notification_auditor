@@ -48,17 +48,19 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
         // Score each channel over a 7-day rolling window
         val sevenDaysAgo = windowEnd - TimeUnit.DAYS.toMillis(7)
         val channels = repository.getActiveChannels(session.sessionId, sevenDaysAgo, windowEnd)
-        val recommendations = mutableListOf<ChannelScore>()
+        val allScores = mutableListOf<ChannelScore>()
 
         for (channel in channels) {
             val channelEvents = repository.getChannelEventsInWindow(
                 session.sessionId, channel.packageName, channel.channelId, sevenDaysAgo, windowEnd
             )
-            val score = ScoringEngine.score(channelEvents) ?: continue
-            if (score.shouldRecommendDisable) recommendations.add(score)
+            ScoringEngine.score(channelEvents)?.let { allScores.add(it) }
         }
 
+        val recommendations = allScores.filter { it.shouldRecommendDisable }
         val recommendationsJson = buildRecommendationsJson(recommendations)
+        // Full breakdown sorted worst-first so the detail view shows problem channels at the top
+        val channelBreakdownJson = buildBreakdownJson(allScores.sortedBy { it.utilityScore })
 
         repository.saveInsight(
             DailyInsight(
@@ -69,7 +71,8 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
                 dismissals = dismissals,
                 ghostOpens = ghostOpens,
                 massClearDismissals = massClearDismissals,
-                recommendationsJson = recommendationsJson
+                recommendationsJson = recommendationsJson,
+                channelBreakdownJson = channelBreakdownJson
             )
         )
 
@@ -99,6 +102,23 @@ class AnalyticsWorker(context: Context, params: WorkerParameters) :
                 put("totalPosted", score.totalPosted)
                 put("clicks", score.clicks)
                 put("dismissals", score.dismissals)
+            })
+        }
+        return array.toString()
+    }
+
+    private fun buildBreakdownJson(scores: List<ChannelScore>): String {
+        val array = JSONArray()
+        for (score in scores) {
+            array.put(JSONObject().apply {
+                put("packageName", score.packageName)
+                put("channelId", score.channelId)
+                put("utilityScore", score.utilityScore)
+                put("totalPosted", score.totalPosted)
+                put("clicks", score.clicks)
+                put("dismissals", score.dismissals)
+                put("ghostOpens", score.ghostOpens)
+                put("flagged", score.shouldRecommendDisable)
             })
         }
         return array.toString()
